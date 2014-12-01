@@ -1,0 +1,345 @@
+
+<div class="users form">
+
+<?php echo $this->Form->create('User',array('type' => 'file')); ?>
+	<fieldset>
+
+	<?php
+
+	foreach ($sections as $section) 
+	{
+	echo  '<h1 style="font-size:30px">'.$section['Section']['nom'].'</h1>';
+	 
+	  usort($section['Attribut'], function($a, $b)
+	   {        
+        	return $a['ordre'] > $b['ordre'] ? 1 : -1;
+    });
+	
+	
+	  if($section['Section']['nom'] =='ÉTABLISSEMENTS SCOLAIRES DES ANNÉES SECONDAIRES')
+	     {
+	     foreach($formationsecs as $formationsec)
+	  	{
+	  	
+	  	 	echo '<span>';
+	  	 	$formationid = $formationsec['Formationsecondaire']['id'];
+	  	 	$key=0;
+	  	 	foreach($formationsecdejaexist as $idx=>$formation)
+	  	 	{
+	  	 	  if ($formation['Userformationsec']['formationsecondaire_id']==$formationid)
+	  	 	  {
+	  	 	   $key=$idx;
+	  	 	    break;
+	  	 	  }
+	  	 	  
+	  	 	}
+	  	
+	  	 	
+         	echo $this->Form->input('formationsececolnom'.$formationid, array('label'=> $formationsec['Formationsecondaire']['nom'] ,'default' => $formationsecdejaexist[$key]['Ecolessecondaire']['nom'], 'required' => 'required',
+            'class' => 'schooltxt',
+            'autocomplete' => 'off'));
+//echo $this->Form->input('formationsececoleid'.$formationsec['Formationsecondaire']['id'], array('type'=>'hidden','class'=>'ecole-id'));
+  //         echo $this->Form->input('formationsecadress'.$formationsec['Formationsecondaire']['id'], array('type'=>'hidden','class'=>'ecole-adresse'));
+     	   echo $this->Form->input('formationsecadress'.$formationid, array('type'=>'text','label'=>'Adresse','class'=>'ecole-adresse-input','default' => $formationsecdejaexist[$key]['Ecolessecondaire']['adresse'], 'required' => 'required' )); 
+		
+		   echo '</span>';
+	     }
+	    }
+	    
+	  
+	 foreach ($section['Attribut'] as $att)
+		{	
+		 
+		 	if($att['pardefault']=='0')
+		 	   break;
+		  switch ($att['type'])
+		{
+			
+		 case "string":
+		$options =  array('label'=>$att['nom']);
+	
+		    if($att['obligatoire'])
+                array_push($options,'required');
+		
+		 	echo $this->Form->input('attribut'.$att['id'], $options );
+		 break;
+		
+		 case "date":
+		 
+		 $options = array('label'=>$att['nom'] ,'placeholder'=>'Date','type' => 'text','div'=>'form-section-inputfield middle');
+		   if($att['obligatoire'])
+                array_push($options,'required');
+		   
+		    echo $this->Form->input('attribut'.$att['id'],$options);
+         break;
+        
+        case "liste":
+       
+        $listatt= array();
+  
+  				  foreach($att['Listattribut'] as $attribut)
+          					{ 
+          						$listatt[$attribut['id']] = $attribut['valeur'];
+    					     }         
+
+        $options =  array('options'=>$listatt, 'label'=>$att['nom']);
+        
+          if(!$att['obligatoire'])
+               $options['empty']='aucun';
+        
+        echo $this->Form->input('attribut'.$att['id'],$options);
+       
+        break;
+		
+		case "file":
+			echo $this->Form->input('image',array('label'=> $att['nom'],  'type' => 'file'));
+		break;
+			}
+		}
+	}
+		
+	?>
+	</fieldset>
+	<div>
+<h3 style="float:right"> Liste des cursus choisis par ordre </h3>
+	<h3 style="float:left"> Liste des cursus </h3>
+	</div>
+ <ul class='sort ui-sortable' id="source" style="overflow: scroll; width: 200px; height: 100px;border:solid black 2px;width:45%;float:left;min-height:500px;">
+<?php 
+		foreach ($formations as $formation) 
+  			{  
+  			 ?>
+  				<li class="ui-state-default nonchoisi" style="" id="formation<?php echo $formation['Formation']['id'] ?>">
+  			   <span><?php echo $formation['Institution']['nom'] ?> </span>  <span style="marign-left:15px" class="numero petittext"></span>
+  			   <table class="formationtab">
+    		 <tr bgcolor="#F7F7F7">
+			    <td height="20" colspan="2" bgcolor="#D8E0E7" class="textepetit">
+				<img style="width: 20px;height: 30px;" src="http://www.usj.edu.lb/logos/100/esib.jpg"><span>	<?php echo $formation['Formation']['nom'] ?></span> <span class="textepetit" bgcolor="#F7F7F7" width="18%"><?php echo $this->Html->link('Plus de détails', "http://".$formation['Formation']['url'], null); ?> </span>	
+			</td>
+			</tr>
+ 			 </table>
+			  </li>
+  		<?php	}  ?>
+</ul>
+
+
+<ul class='sort ui-sortable' style="border:solid red 2px;float:right;width:45%;min-height:500px;">
+<?php 
+
+	  usort($formationdejaexist, function($a, $b)
+	   {        
+        	return $a['Userformation']['priorite'] > $b['Userformation']['priorite'] ? 1 : -1;
+    });
+
+		foreach ($formationdejaexist as $formation) 
+  			{ ?>
+  				<li class="ui-state-default choisi" style="" id="formation<?php echo $formation['Formation']['id'] ?>">
+  			   <span><?php echo $formation['Formation']['Institution']['nom'] ?> </span>  <span style="marign-left:15px" class="numero petittext"><?php echo "(".$formation['Userformation']['priorite'].")";?></span>
+  			   <table class="formationtab">
+    		 <tr bgcolor="#F7F7F7">
+			    <td height="20" colspan="2" bgcolor="#D8E0E7" class="textepetit">
+				<img style="width: 20px;height: 30px;" src="http://www.usj.edu.lb/logos/100/esib.jpg"><span>	<?php echo $formation['Formation']['nom'] ?></span> <span class="textepetit" bgcolor="#F7F7F7" width="18%"><?php echo $this->Html->link('Plus de détails', "http://".$formation['Formation']['url'], null); ?> </span>	
+			</td>
+			</tr>
+ 			 </table>
+			  </li>
+  		<?php	}  ?>
+</ul>
+</ul>
+
+<style>
+.formationtab{
+border-bottom-color: rgb(128, 128, 128);
+border-collapse: separate;
+border-left-color: rgb(128, 128, 128);
+border-right-color: rgb(128, 128, 128);
+border-top-color: rgb(128, 128, 128);
+color: rgb(0, 0, 0);
+display: table-row-group;
+font-family: Verdana, Arial, Helvetica, sans-serif;
+font-size: 16px;
+font-style: normal;
+font-variant: normal;
+font-weight: normal;
+height: 20px;
+line-height: normal;
+text-align: start;
+vertical-align: middle;
+white-space: normal;
+width: 100%;
+}
+.textepetit {
+font-family: Verdana, Arial, Helvetica, sans-serif;
+font-size: 10px;
+font-style: normal;
+font-weight: normal;
+color: #000000;
+}
+
+</style>
+
+<br style="clear:both">
+	
+	
+
+<?php echo $this->Form->end(__('Submit')); ?>
+<?php echo $this->Html->link(__('Generer PDF'), array('controller' => 'Users', 'action' => 'pdf')); ?>
+<?php echo $this->Html->link(__('Generer PDF'), array('controller' => 'Users', 'action' => 'pdf2')); ?>
+
+</div>
+
+  <script>
+
+$('.sort').sortable({
+    connectWith: '.sort',
+    items: '> li:not(.pin)',
+    revert:false,
+    stop: function()
+    {
+        $('.sort').each(function(event,ui){
+       		updatepriorite();
+       	
+            var $this = $(this);
+            $this.sortable('enable');              
+        });
+       },
+        receive: function(e, ui) 
+        { 
+            if(!$(ui.item).is(".choisi"))
+            {
+            	$(ui.item).addClass("choisi");
+            	$(ui.item).removeClass("nonchoisi");
+            }
+        else
+             {
+             $(ui.item).removeClass("choisi");
+             $(ui.item).addClass("nonchoisi");
+             }
+        }
+});
+
+function updatepriorite()
+{
+
+ 	   $( ".numero" ).each(function( index, element )
+       {
+		$(this).html();
+  	   });
+  	   
+  	   $( ".nonchoisi" ).each(function( index, element )
+       {
+		$(element).find("span.numero").html("");
+  	   });
+  	    
+       $( ".choisi" ).each(function( index, element )
+       {
+		$(element).find("span.numero").html("("+ (index+1)+")");
+  	   });
+  	   
+  	          $( ".nonchoisi" ).each(function( index, element )
+       {
+		$(element).find("span.numero").html("");
+  	   });
+}
+
+
+$('.sort li').mousedown(function(){
+    // Check number of elements already in each sortable
+    $('.sort').not($(this).parent()).not($('#source')).each(function(){
+        var $this = $(this);
+
+        if($this.find('li').not($('.pin')).length >= 6){
+            $this.sortable('disable');
+        } else {
+            $this.sortable('enable');
+        }
+    });
+})
+
+$('form').submit(function(){
+  $( ".choisi" ).each(function( index, element )
+       {
+			$('<input>').attr({type: 'hidden',value: 'priorite'+(index+1),name: $(this).attr('id') }).appendTo('form');
+  	    });
+  	 
+});
+  </script>
+<script>
+
+
+$( "#UserBlancformForm" ).validate();
+
+
+
+$('.ecole-adresse-input').each(function(i, el) 
+{
+
+   $(this).attr('readonly','readonly');
+});
+
+$('.schooltxt').each(function(i, el) 
+{
+ $this = $(el);
+ $(this).focus(function() {
+  $( this ).val("" );
+   $(this).parent().parent().find('.ecole-adresse-input').val("");
+   $(this).parent().parent().find('.ecole-adresse-input').removeAttr('readonly');
+});
+
+ 
+ $this.autocomplete
+({
+  source: <?php echo '"'.$this->Html->url( '/', true ).''; ?>ecolessecondaires/find",
+  minLength: 1,
+  delay: 2,
+   focus: function( event, ui ) {
+        $(this).val( ui.item.Ecolessecondaire.nom );
+        return false;
+      },
+        selectFirst: true,
+      select: function( event, ui ) {
+        $(this).val( ui.item.Ecolessecondaire.nom);
+        $(this).parent().parent().find('.ecole-adresse-input').val(ui.item.Ecolessecondaire.adresse);
+        $(this).parent().parent().find('.ecole-adresse-input').attr('readonly','readonly');
+        return false;
+      }
+    }).data( "ui-autocomplete" )._renderItem = function( ul, item )
+    {
+      return $( "<li>" )
+        .append( "<a>" + item.Ecolessecondaire.nom + "<br>" + item.Ecolessecondaire.adresse + "</a>" )
+        .appendTo( ul );
+    }
+});
+function isDate(txtDate)
+{
+    var currVal = txtDate;
+    if(currVal == '')
+        return false;
+    
+    var rxDatePattern = /^(\d{1,2})(\/|-)(\d{1,2})(\/|-)(\d{4})$/; //Declare Regex
+    var dtArray = currVal.match(rxDatePattern); // is format OK?
+    
+    if (dtArray == null) 
+        return false;
+    
+    //Checks for mm/dd/yyyy format.
+    dtMonth = dtArray[3];
+    dtDay= dtArray[1];
+    dtYear = dtArray[5];        
+    
+    if (dtMonth < 1 || dtMonth > 12) 
+        return false;
+    else if (dtDay < 1 || dtDay> 31) 
+        return false;
+    else if ((dtMonth==4 || dtMonth==6 || dtMonth==9 || dtMonth==11) && dtDay ==31) 
+        return false;
+    else if (dtMonth == 2) 
+    {
+        var isleap = (dtYear % 4 == 0 && (dtYear % 100 != 0 || dtYear % 400 == 0));
+        if (dtDay> 29 || (dtDay ==29 && !isleap)) 
+                return false;
+    }
+    return true;
+}
+
+</script>
