@@ -107,21 +107,6 @@ class UsersController extends AppController {
 	}
 	
 	
-	public function login() {
-	
-	if ($this->Session->read('Auth.User'))
-    {
-         //$this->Session->setFlash('Vous êtes connectés!');
-	     return $this->redirect(array('controller'=>'users','action' => 'profile'));
-    }
-
-    if ($this->request->is('post')) {
-        if ($this->Auth->login()) {
-		     return $this->redirect(array('controller'=>'users','action' => 'login'));
-			
-        }
-        $this->Session->setFlash(__('Mauvaise authentification'));
-    }
 }
 
 public function profile(){
@@ -169,13 +154,6 @@ public function profile(){
 	$this->set('listeDossiers',$listeDossiers);
 }
 
-
-public function logout()
-{
-   $this->Session->setFlash('Déconnecter');
-   $this->Session->delete('dossier_id');
-   $this->redirect($this->Auth->logout());
-}
 
 
 
@@ -234,23 +212,6 @@ public function getformationkeys($formationdejaexist)
 	   	return $keys;
 	}
 	
-	public function register()
-	{
-	if ($this->request->is('post')) 
-	{
-	   $this->loadModel('Group');
-		$groupe = $this->Group->findByName('Etudiants');
-		   $this->request->data['User']['group_id']=$groupe["Group"]["id"];//set groupid to etudiants;
-		   $this->request->data['User']['activated']=0;
-            if ($res=$this->User->save($this->request->data)) {
- 				 $this->Auth->login($res['User']);
- 				  $this->__sendActivationEmail($res['User']['activationcode'],$res['User']['email']);
-                	return $this->redirect(array('action' => 'profile'));
-            } else {
-                $this->Session->setFlash("Il y avait une erreur, s'il vous plaît vérifier les champs!");
-            }
-		}
-	}
 
 
 public function newuser()
